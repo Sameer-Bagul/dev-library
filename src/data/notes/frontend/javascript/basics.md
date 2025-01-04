@@ -81,6 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
 3. Write clean, modular code
 4. Use modern ES6+ features
 
->💡 **Tip**: Always consider browser compatibility when using modern JavaScript features.
+> 💡 **Tip**: Always consider browser compatibility when using modern JavaScript features.
 
 [← Back to CSS](css-fundamentals) | [Next: Advanced JavaScript →](advanced)

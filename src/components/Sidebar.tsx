@@ -1,95 +1,104 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Book, Code, Database, FileCode2, Globe, Home, Layout, Server, ChevronDown, ChevronRight } from 'lucide-react';
-import { getAllNotes } from '../utils/noteUtils';
-
-const iconMap = {
-  home: Home,
-  layout: Layout,
-  server: Server,
-  database: Database,
-  code: Code,
-  globe: Globe,
-  'file-code2': FileCode2,
-  book: Book,
-};
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { getSubjects, getTopicsBySubject, getNotesByTopic } from '../utils/noteUtils';
 
 export default function Sidebar() {
   const location = useLocation();
-  const notes = getAllNotes();
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({
+    'Frontend Development': true // Open by default
+  });
+  const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
   
-  // Group notes by category and subcategory
-  const groupedNotes = notes.reduce((acc, note) => {
-    if (!acc[note.category]) {
-      acc[note.category] = {};
-    }
-    if (!acc[note.category][note.subcategory || 'Other']) {
-      acc[note.category][note.subcategory || 'Other'] = [];
-    }
-    acc[note.category][note.subcategory || 'Other'].push(note);
-    return acc;
-  }, {} as Record<string, Record<string, typeof notes>>);
+  const subjects = getSubjects();
 
-  // State to handle open categories and subcategories
-  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
-  const [openSubcategories, setOpenSubcategories] = useState<Record<string, boolean>>({});
-
-  const toggleCategory = (category: string) => {
-    setOpenCategories((prev) => ({ ...prev, [category]: !prev[category] }));
+  const toggleSubject = (subject: string) => {
+    setExpandedSubjects(prev => ({
+      ...prev,
+      [subject]: !prev[subject]
+    }));
   };
 
-  const toggleSubcategory = (subcategory: string) => {
-    setOpenSubcategories((prev) => ({ ...prev, [subcategory]: !prev[subcategory] }));
+  const toggleTopic = (topic: string) => {
+    setExpandedTopics(prev => ({
+      ...prev,
+      [topic]: !prev[topic]
+    }));
   };
 
   return (
-    <div className="w-64 h-screen bg-white/10 backdrop-blur-lg border-r border-gray-200/20 p-4 fixed left-0 top-0 overflow-y-auto">
-      <div className="flex items-center gap-2 mb-8">
-        <FileCode2 className="w-8 h-8 text-indigo-500" />
-        <h1 className="text-xl font-bold text-white">DevNotes</h1>
+    <aside className="w-64 h-screen fixed left-0 top-0 bg-[var(--color-sidebar)] border-r border-[var(--color-border)] overflow-y-auto">
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-8">
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)]">DevNotes</h1>
+        </div>
+        
+        <nav className="space-y-2">
+          {subjects.map(subject => {
+            const topics = getTopicsBySubject(subject);
+            const isSubjectExpanded = expandedSubjects[subject];
+
+            return (
+              <div key={subject} className="space-y-1">
+                <button
+                  onClick={() => toggleSubject(subject)}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                >
+                  <span className="flex-1 text-left text-sm font-medium">{subject}</span>
+                  {isSubjectExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </button>
+
+                {isSubjectExpanded && (
+                  <div className="ml-4 space-y-1">
+                    {topics.map(topic => {
+                      const notes = getNotesByTopic(subject, topic);
+                      const isTopicExpanded = expandedTopics[topic];
+
+                      return (
+                        <div key={topic} className="space-y-1">
+                          <button
+                            onClick={() => toggleTopic(topic)}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                          >
+                            {isTopicExpanded ? (
+                              <ChevronDown className="w-3 h-3" />
+                            ) : (
+                              <ChevronRight className="w-3 h-3" />
+                            )}
+                            <span className="flex-1 text-left text-sm">{topic}</span>
+                          </button>
+
+                          {isTopicExpanded && notes.length > 0 && (
+                            <div className="ml-4 space-y-1">
+                              {notes.map(note => (
+                                <Link
+                                  key={note.id}
+                                  to={note.path}
+                                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
+                                    location.pathname === note.path
+                                      ? 'bg-[var(--color-accent)] text-white'
+                                      : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)]'
+                                  }`}
+                                >
+                                  <span>Chapter {note.chapter}: {note.title}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
       </div>
-      
-      <nav className="space-y-6">
-        {Object.entries(groupedNotes).map(([category, subcategories]) => (
-          <div key={category} className="space-y-2">
-            <button
-              className="flex justify-between items-center w-full text-sm font-semibold text-gray-400 uppercase tracking-wider px-4"
-              onClick={() => toggleCategory(category)}
-            >
-              {category}
-              {openCategories[category] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-            
-            {openCategories[category] &&
-              Object.entries(subcategories).map(([subcategory, notes]) => (
-                <div key={subcategory} className="ml-4">
-                  <button
-                    className="flex justify-between items-center w-full text-xs font-medium text-gray-500 px-4 py-1"
-                    onClick={() => toggleSubcategory(`${category}-${subcategory}`)}
-                  >
-                    {subcategory}
-                    {openSubcategories[`${category}-${subcategory}`] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </button>
-                  
-                  {openSubcategories[`${category}-${subcategory}`] &&
-                    notes.map((note) => (
-                      <Link
-                        key={note.id}
-                        to={note.path}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
-                          location.pathname === note.path
-                            ? 'bg-indigo-500/20 text-indigo-400'
-                            : 'text-gray-300 hover:bg-white/10'
-                        }`}
-                      >
-                        {note.title}
-                      </Link>
-                    ))}
-                </div>
-              ))}
-          </div>
-        ))}
-      </nav>
-    </div>
+    </aside>
   );
 }

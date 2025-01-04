@@ -17,12 +17,10 @@ export default function NoteCard({ note }: NoteCardProps) {
       <p className="text-gray-300 mb-4 line-clamp-2">{note.content.substring(0, 150)}...</p>
       
       <div className="flex items-center gap-4 text-sm text-gray-400">
-        
         <div className="flex items-center gap-1">
           <Calendar className="w-4 h-4" />
           <span>{new Date(note.createdAt).toLocaleDateString()}</span>
         </div>
-        
         <div className="flex items-center gap-2">
           <Tag className="w-4 h-4" />
           <div className="flex gap-2">
@@ -36,9 +34,7 @@ export default function NoteCard({ note }: NoteCardProps) {
             ))}
           </div>
         </div>
-
       </div>
-    
     </Link>
   );
 }

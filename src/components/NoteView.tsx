@@ -2,70 +2,99 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MarkdownRenderer from './MarkdownRenderer';
 import TableOfContents from './TableOfContents';
-import ChapterNavigation from './ChapterNavigation';
-import { Clock, Calendar } from 'lucide-react';
-import { extractTableOfContents, formatDate, getReadingTime, getAllNotes } from '../utils/noteUtils';
+import Pagination from './Pagination';
+import ProgressBar from './ProgressBar';
+import { Clock, Calendar, BookOpen } from 'lucide-react';
+import { 
+  extractTableOfContents, 
+  formatDate, 
+  getReadingTime,
+  getAdjacentNotes,
+  getNoteContent
+} from '../utils/noteUtils';
 
 export default function NoteView() {
   const { category, subcategory, noteId } = useParams();
   const [content, setContent] = useState('');
   const [currentSection, setCurrentSection] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const response = await fetch(`/src/data/notes/${category}/${subcategory}/${noteId}.md`);
-        const text = await response.text();
-        setContent(text);
+        setIsLoading(true);
+        if (category && subcategory && noteId) {
+          const noteContent = await getNoteContent(category, subcategory, noteId);
+          setContent(noteContent);
+          setError('');
+        }
       } catch (error) {
         console.error('Error loading note:', error);
-        setContent('# Note not found\n\nSorry, the requested note could not be loaded.');
+        setError('Failed to load the note content.');
+        setContent('');
+      } finally {
+        setIsLoading(false);
       }
     };
     
     loadContent();
+    window.scrollTo(0, 0);
   }, [category, subcategory, noteId]);
 
   const toc = extractTableOfContents(content);
   const readingTime = getReadingTime(content);
+  const { previous, next } = getAdjacentNotes(`/${category}/${subcategory}/${noteId}`);
 
-  // Get adjacent notes for navigation
-  const notes = getAllNotes();
-  const currentIndex = notes.findIndex(note => note.path === `/${category}/${subcategory}/${noteId}`);
-  const previousNote = currentIndex > 0 ? notes[currentIndex - 1] : undefined;
-  const nextNote = currentIndex < notes.length - 1 ? notes[currentIndex + 1] : undefined;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[var(--color-accent)]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Note</h2>
+        <p className="text-[var(--color-text-secondary)]">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-12 gap-8">
-      <article className="col-span-9 bg-white/5 backdrop-blur-lg rounded-lg border border-white/10 p-8">
-        <div className="flex items-center gap-4 text-sm text-gray-400 mb-8">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            <span>{formatDate(new Date().toISOString())}</span>
+    <>
+      <ProgressBar />
+      <div className="grid grid-cols-12 gap-8">
+        <article className="col-span-12 lg:col-span-9 bg-[var(--color-card)] rounded-lg border border-[var(--color-border)] p-8">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-text-tertiary)] mb-8">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>{formatDate(new Date().toISOString())}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{readingTime} min read</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <BookOpen className="w-4 h-4" />
+              <span>{category} / {subcategory}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            <span>{readingTime} min read</span>
-          </div>
-        </div>
+          
+          <MarkdownRenderer content={content} />
+          
+          <Pagination
+            previousNote={previous}
+            nextNote={next}
+          />
+        </article>
         
-        <MarkdownRenderer content={content} />
-        
-        <ChapterNavigation
-          previousChapter={previousNote ? {
-            slug: previousNote.path,
-            title: previousNote.title
-          } : undefined}
-          nextChapter={nextNote ? {
-            slug: nextNote.path,
-            title: nextNote.title
-          } : undefined}
-        />
-      </article>
-      
-      <aside className="col-span-3">
-        <TableOfContents items={toc} currentSection={currentSection} />
-      </aside>
-    </div>
+        <aside className="hidden lg:block lg:col-span-3">
+          <TableOfContents items={toc} currentSection={currentSection} />
+        </aside>
+      </div>
+    </>
   );
 }

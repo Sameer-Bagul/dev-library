@@ -8,6 +8,14 @@ export interface Note {
   updatedAt: string;
 }
 
+export interface NoteMetadata {
+  id: string;
+  title: string;
+  path: string;
+  chapter: number;
+  icon: string;
+}
+
 export interface Category {
   id: string;
   name: string;
