@@ -1,28 +1,3 @@
-import { resolve } from 'path';
-
-// Import all markdown files using the correct path pattern
-const markdownFiles = import.meta.glob('/src/data/notes/**/*.md', { 
-  as: 'raw',
-  eager: true 
-});
-
-export async function getNoteContent(category?: string, subcategory?: string, noteId?: string): Promise<string> {
-  if (!category || !subcategory || !noteId) {
-    return '';
-  }
-
-  const path = `/src/data/notes/${category}/${subcategory}/${noteId}.md`;
-  
-  try {
-    // Access the content directly since we're using eager loading
-    const content = markdownFiles[path] || '';
-    return content;
-  } catch (error) {
-    console.error('Error loading markdown content:', error);
-    return '';
-  }
-}
-
 export function extractTableOfContents(content: string): { id: string; title: string; level: number; }[] {
   if (!content) return [];
   

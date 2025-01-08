@@ -1,90 +1,105 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { getSubjects, getTopicsBySubject, getNotesByTopic } from '../utils/noteUtils';
+import { getCategories, getNotesByCategory, getSubcategories, getNotesBySubcategory } from '../utils/navigationUtils';
 
 export default function Sidebar() {
   const location = useLocation();
-  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({
-    'Frontend Development': true // Open by default
-  });
-  const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Record<string, boolean>>({});
   
-  const subjects = getSubjects();
+  const categories = getCategories();
 
-  const toggleSubject = (subject: string) => {
-    setExpandedSubjects(prev => ({
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
       ...prev,
-      [subject]: !prev[subject]
+      [category]: !prev[category]
     }));
   };
 
-  const toggleTopic = (topic: string) => {
-    setExpandedTopics(prev => ({
+  const toggleSubcategory = (subcategory: string) => {
+    setExpandedSubcategories(prev => ({
       ...prev,
-      [topic]: !prev[topic]
+      [subcategory]: !prev[subcategory]
     }));
   };
 
   return (
     <aside className="w-64 h-screen fixed left-0 top-0 bg-[var(--color-sidebar)] border-r border-[var(--color-border)] overflow-y-auto">
       <div className="p-4">
-        <div className="flex items-center gap-2 mb-8">
+        <Link to="/" className="flex items-center gap-2 mb-8">
           <h1 className="text-xl font-bold text-[var(--color-text-primary)]">DevNotes</h1>
-        </div>
+        </Link>
         
         <nav className="space-y-2">
-          {subjects.map(subject => {
-            const topics = getTopicsBySubject(subject);
-            const isSubjectExpanded = expandedSubjects[subject];
+          {categories.map(category => {
+            const isExpanded = expandedCategories[category];
+            const subcategories = getSubcategories(category);
+            const categoryNotes = getNotesByCategory(category);
 
             return (
-              <div key={subject} className="space-y-1">
+              <div key={category} className="space-y-1">
                 <button
-                  onClick={() => toggleSubject(subject)}
+                  onClick={() => toggleCategory(category)}
                   className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                 >
-                  <span className="flex-1 text-left text-sm font-medium">{subject}</span>
-                  {isSubjectExpanded ? (
+                  {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
                     <ChevronRight className="w-4 h-4" />
                   )}
+                  <span className="flex-1 text-left text-sm font-medium">{category}</span>
                 </button>
 
-                {isSubjectExpanded && (
+                {isExpanded && (
                   <div className="ml-4 space-y-1">
-                    {topics.map(topic => {
-                      const notes = getNotesByTopic(subject, topic);
-                      const isTopicExpanded = expandedTopics[topic];
+                    {/* Direct category notes */}
+                    {categoryNotes.map(note => (
+                      <Link
+                        key={note.id}
+                        to={note.path.slice(1)}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
+                          location.pathname === '/' + note.path.slice(1)
+                            ? 'bg-[var(--color-accent)] text-white'
+                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)]'
+                        }`}
+                      >
+                        <span>{note.title}</span>
+                      </Link>
+                    ))}
+
+                    {/* Subcategories */}
+                    {subcategories.map(subcategory => {
+                      const isSubcategoryExpanded = expandedSubcategories[subcategory];
+                      const subcategoryNotes = getNotesBySubcategory(category, subcategory);
 
                       return (
-                        <div key={topic} className="space-y-1">
+                        <div key={subcategory} className="space-y-1">
                           <button
-                            onClick={() => toggleTopic(topic)}
+                            onClick={() => toggleSubcategory(subcategory)}
                             className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                           >
-                            {isTopicExpanded ? (
+                            {isSubcategoryExpanded ? (
                               <ChevronDown className="w-3 h-3" />
                             ) : (
                               <ChevronRight className="w-3 h-3" />
                             )}
-                            <span className="flex-1 text-left text-sm">{topic}</span>
+                            <span className="flex-1 text-left text-sm">{subcategory}</span>
                           </button>
 
-                          {isTopicExpanded && notes.length > 0 && (
+                          {isSubcategoryExpanded && (
                             <div className="ml-4 space-y-1">
-                              {notes.map(note => (
+                              {subcategoryNotes.map(note => (
                                 <Link
                                   key={note.id}
-                                  to={note.path}
+                                  to={note.path.slice(1)}
                                   className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
-                                    location.pathname === note.path
+                                    location.pathname === '/' + note.path.slice(1)
                                       ? 'bg-[var(--color-accent)] text-white'
                                       : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)]'
                                   }`}
                                 >
-                                  <span>Chapter {note.chapter}: {note.title}</span>
+                                  <span>{note.title}</span>
                                 </Link>
                               ))}
                             </div>

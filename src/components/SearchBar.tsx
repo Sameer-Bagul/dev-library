@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { searchNotes } from '../utils/noteUtils';
+import { searchNotes } from '../utils/searchUtils';
 import { NoteMetadata } from '../types';
 
 export default function SearchBar() {
@@ -17,9 +17,20 @@ export default function SearchBar() {
       }
     };
 
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === '/' && !isOpen) {
+        event.preventDefault();
+        searchRef.current?.querySelector('input')?.focus();
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isOpen]);
 
   const handleSearch = (value: string) => {
     setQuery(value);
@@ -65,13 +76,13 @@ export default function SearchBar() {
           {results.map((result) => (
             <Link
               key={result.id}
-              to={result.path}
+              to={result.path.slice(1)}
               onClick={() => setIsOpen(false)}
               className="block px-4 py-2 hover:bg-[var(--color-card-hover)] text-[var(--color-text-primary)] transition-colors"
             >
               <div className="font-medium">{result.title}</div>
               <div className="text-sm text-[var(--color-text-tertiary)]">
-                Chapter {result.chapter}
+                {result.path.split('/').slice(0, -1).join(' / ')}
               </div>
             </Link>
           ))}

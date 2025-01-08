@@ -1,12 +1,9 @@
 import React from 'react';
 import NoteList from './NoteList';
-import { getNotesByTopic } from '../utils/noteUtils';
+import { getNotesByCategory } from '../utils/navigationUtils';
 
 export default function Home() {
-  const frontendNotes = getNotesByTopic(
-    'Frontend Development',
-    'Getting Started'
-  );
+  const gettingStartedNotes = getNotesByCategory('Getting Started');
 
   return (
     <div className="space-y-8">
@@ -20,7 +17,9 @@ export default function Home() {
         </p>
       </div>
 
-      <NoteList title="Getting Started" notes={frontendNotes} />
+      {gettingStartedNotes.length > 0 && (
+        <NoteList title="Getting Started" notes={gettingStartedNotes} />
+      )}
     </div>
   );
 }

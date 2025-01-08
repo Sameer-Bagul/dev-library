@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import MarkdownRenderer from './MarkdownRenderer';
 import TableOfContents from './TableOfContents';
 import Pagination from './Pagination';
@@ -10,11 +10,12 @@ import {
   formatDate, 
   getReadingTime,
   getAdjacentNotes,
-  getNoteContent
 } from '../utils/noteUtils';
+import { getNoteContent } from '../utils/fileSystem';
 
 export default function NoteView() {
-  const { category, subcategory, noteId } = useParams();
+  const { '*': path } = useParams(); // Use catch-all parameter
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [currentSection, setCurrentSection] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -24,8 +25,11 @@ export default function NoteView() {
     const loadContent = async () => {
       try {
         setIsLoading(true);
-        if (category && subcategory && noteId) {
-          const noteContent = await getNoteContent(category, subcategory, noteId);
+        if (path) {
+          const noteContent = await getNoteContent('/' + path);
+          if (!noteContent) {
+            throw new Error('Note not found');
+          }
           setContent(noteContent);
           setError('');
         }
@@ -40,11 +44,11 @@ export default function NoteView() {
     
     loadContent();
     window.scrollTo(0, 0);
-  }, [category, subcategory, noteId]);
+  }, [path]);
 
   const toc = extractTableOfContents(content);
   const readingTime = getReadingTime(content);
-  const { previous, next } = getAdjacentNotes(`/${category}/${subcategory}/${noteId}`);
+  const { previous, next } = getAdjacentNotes('/' + (path || ''));
 
   if (isLoading) {
     return (
@@ -59,6 +63,12 @@ export default function NoteView() {
       <div className="text-center py-8">
         <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Note</h2>
         <p className="text-[var(--color-text-secondary)]">{error}</p>
+        <button 
+          onClick={() => navigate('/')}
+          className="mt-4 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
+        >
+          Return Home
+        </button>
       </div>
     );
   }
@@ -79,7 +89,7 @@ export default function NoteView() {
             </div>
             <div className="flex items-center gap-1">
               <BookOpen className="w-4 h-4" />
-              <span>{category} / {subcategory}</span>
+              <span>{path?.split('/').slice(0, -1).join(' / ')}</span>
             </div>
           </div>
           
