@@ -75,3 +75,4 @@
 .prose code[class*="language-"] {
   @apply text-gray-800 dark:text-gray-200;
 }
+
