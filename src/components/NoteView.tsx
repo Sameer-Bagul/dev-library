@@ -41,7 +41,7 @@ export default function NoteView() {
         setIsLoading(false);
       }
     };
-    
+        
     loadContent();
     window.scrollTo(0, 0);
   }, [path]);

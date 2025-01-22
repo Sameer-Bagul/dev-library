@@ -1,8 +1,6 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Tag } from 'lucide-react';
 import { Note } from '../types';
-
 interface NoteCardProps {
   note: Note;
 }

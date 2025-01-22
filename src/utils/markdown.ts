@@ -17,7 +17,7 @@ export function extractTableOfContents(content: string): { id: string; title: st
 
 export function getReadingTime(content: string): number {
   if (!content) return 0;
-  const wordsPerMinute = 200;
+  const wordsPerMinute = 20;
   const words = content.trim().split(/\s+/).length;
   return Math.ceil(words / wordsPerMinute);
 }
