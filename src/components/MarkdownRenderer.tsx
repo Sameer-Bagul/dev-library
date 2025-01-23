@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 
 interface MarkdownRendererProps {
@@ -16,15 +16,23 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         code({ node, inline, className, children, ...props }) {
           const match = /language-(\w+)/.exec(className || '');
           return !inline && match ? (
+            
             <SyntaxHighlighter
-              style={vscDarkPlus}
+              style={dracula}
               language={match[1]}
               PreTag="div"
+              customStyle={{
+                backgroundColor: '#0d1117', // Your custom background color
+                // borderRadius: '10px',       // Rounded corners
+                // padding: '20px',            // Spacing
+                // fontSize: '1rem',           // Adjust font size
+              }}
               className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg"
               {...props}
             >
               {String(children).replace(/\n$/, '')}
             </SyntaxHighlighter>
+
           ) : (
             <code
               className={`${className} bg-[var(--color-bg-secondary)] text-[var(--color-accent)] px-1.5 py-0.5 rounded`}
