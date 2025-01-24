@@ -13,9 +13,9 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       remarkPlugins={[remarkGfm]}
       className="prose prose-invert max-w-none"
       components={{
-        code({ node, inline, className, children, ...props }) {
+        code({ className, children, ...props }) {
           const match = /language-(\w+)/.exec(className || '');
-          return !inline && match ? (
+          return match ? (
             
             <SyntaxHighlighter
               style={dracula}
