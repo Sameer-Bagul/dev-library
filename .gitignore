@@ -25,6 +25,3 @@ dist-ssr
 
 # Environment variables
 .env
-
-# Data folder 
-data 
