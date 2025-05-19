@@ -1,10 +1,10 @@
 import { NoteMetadata, CategoryStructure } from '../types';
 
 // Get all markdown files recursively
-const markdownFiles = import.meta.glob('/src/data/notes/**/*.md', { 
-  as: 'raw',
-  eager: true 
-});
+const markdownFiles = Object.fromEntries(
+  Object.entries(import.meta.glob('/src/data/notes/**/*.md', { as: 'raw', eager: true }))
+    .map(([key, value]) => [key, typeof value === 'string' ? value : JSON.stringify(value)])
+);
 
 export function buildFileStructure(): CategoryStructure {
   const structure: CategoryStructure = {};
@@ -100,7 +100,11 @@ export async function getNoteContent(path: string): Promise<string> {
   const fullPath = `/src/data/notes${path}.md`;
   
   try {
-    return markdownFiles[fullPath] || '';
+    const content = markdownFiles[fullPath];
+    if (!content) {
+      throw new Error('File not found');
+    }
+    return content;
   } catch (error) {
     console.error('Error loading markdown content:', error);
     return '';
